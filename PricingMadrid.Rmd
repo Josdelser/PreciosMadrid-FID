@@ -64,7 +64,7 @@ Una vez con los datos bien definido, pasamos a la visualización.
 barplot(table(data$postalcode),
 main="Número de casas por zona(Código Postal)",
 xlab="Código Postal",
-ylab="Número de casas",)
+ylab="Número de casas",) 
 ```
 
 

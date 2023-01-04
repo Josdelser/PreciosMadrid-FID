@@ -110,6 +110,22 @@ media1$Group.1 <- as.factor(as.numeric(media1$Group.1))
 ggplot(media1, aes(x= floor_built, y=price, colour=Group.1)) + geom_point() 
 ```
 
+Gráfica para saber dependiendo del tipo de casas si lleva garage o no. Podriamos hacer esto con las diferentes variables, solo habría que cambiar el valor del aes.
+
+```{r}
+a<- ggplot(data_metros, aes(garage_included)) 
+a + geom_bar(aes(fill = tipo))
+
+```
+
+
+Gráfica según el número de tipos de casas por zona
+```{r}
+a<- ggplot(data_metros, aes(postalcode)) 
+
+a + geom_bar(aes(fill = tipo))
+```
+
 
 
 

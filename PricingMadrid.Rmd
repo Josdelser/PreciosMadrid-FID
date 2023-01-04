@@ -1,0 +1,73 @@
+---
+title: "Pricing"
+output: html_document
+date: "2023-01-04"
+---
+Paquetes y librerias
+```{r}
+install.packages("tidyverse")
+install.packages("dplyr")
+install.packages("rattle")
+# libraries
+library(rpart)
+library(rattle)
+library(dplyr)
+library(ggplot2)
+
+set.seed(1)
+```
+
+
+Lectura del dataset 
+```{r}
+precios_madrid <- read.csv("PreciosMadrid.csv")
+precios_madrid
+colnames(precios_madrid)
+
+```
+Elijo las columnas que parecen mas interesantes
+```{r}
+predata1 <- select(precios_madrid,price,floor_built,bathrooms,terrace,bedrooms,postalcode,garage_included)
+predata1
+colnames(predata1)
+```
+Elimino pisos que cuesten 0, tengan 0 habitaciones,esten repetidos o sean NA. Tambien para acotar el dataset vamos a coger solo los anuncios de 10 postalcode
+```{r}
+predata2 = subset(predata1, price>0 & bedrooms>1 & postalcode>=28001 & postalcode<=28011)
+predata2 <- na.omit(predata2)
+predata <- unique(predata2)
+
+
+```
+
+Convertir las columnas de valores char("True","False") en num(1,0) y los distritos pasarlos a numeros para trabajar con ellos.Tambien estandarizo todo en numeric
+```{r}
+predata$terrace <- as.numeric(as.logical(predata$terrace))
+predata$garage_included <- as.numeric(as.logical(predata$garage_included))
+predata$postalcode <- as.numeric(as.integer(predata$postalcode))
+predata$price <- as.numeric(as.integer(predata$price))
+predata$floor_built <- as.numeric(as.integer(predata$floor_built))
+predata$bathrooms <- as.numeric(as.integer(predata$bathrooms))
+predata$bedrooms <- as.numeric(as.integer(predata$bedrooms))
+
+```
+
+Finalmente despues del preprocesamiento de datos, obtenemos el dataset final
+```{r}
+data<-predata
+
+```
+
+
+Una vez con los datos bien definido, pasamos a la visualización. 
+```{r}
+barplot(table(data$postalcode),
+main="Número de casas por zona(Código Postal)",
+xlab="Código Postal",
+ylab="Número de casas",)
+```
+
+
+
+
+

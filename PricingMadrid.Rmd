@@ -59,12 +59,55 @@ data<-predata
 ```
 
 
-Una vez con los datos bien definido, pasamos a la visualización. 
+Una vez con los datos bien definido, pasamos a la visualización.
+
+Primero vamos a ver el número de casas por código postal. 
 ```{r}
 barplot(table(data$postalcode),
 main="Número de casas por zona(Código Postal)",
 xlab="Código Postal",
-ylab="Número de casas",) 
+ylab="Número de casas",)
+```
+
+Vamos a etiquetar y categorizar según los metros construidos.
+```{r}
+data_metros <- data
+
+data_metros[order(data_metros$floor_built),]
+rangos <- c(0,65,100,150,Inf)
+values <- c ('Piso','Duplex','Casa','Chalet')
+
+data_metros$tipo <- cut(data_metros$floor_built, breaks = rangos, labels = values)
+
+barplot(table(data_metros$tipo),
+main="Número de casas según el tipo",
+xlab="Tipo",
+ylab="Número de casas",
+col=c("red","orange","green","blue"),) 
+```
+
+
+
+
+Vamos a calcular el precio medio y metros construidos dependiendo de la zona donde vivas (Código postal)
+```{r}
+
+media1 <- aggregate(data[, 1:2], list(data$postalcode), mean)
+media1
+
+```
+
+Vamos a graficar la media de precio según los metros construidos de media en  en barras
+
+```{r}
+ggplot(media1, aes(x = floor_built, y = price)) +
+        geom_col()
+```
+Vamos a graficar la media de precio según los metros construidos de media por zonas en puntos
+```{r}
+#Pasamos a factor el codigo postal para ver mejor el codigo de colores
+media1$Group.1 <- as.factor(as.numeric(media1$Group.1))
+ggplot(media1, aes(x= floor_built, y=price, colour=Group.1)) + geom_point() 
 ```
 
 

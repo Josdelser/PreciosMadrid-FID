@@ -17,8 +17,9 @@ library(ggplot2)
 library(RColorBrewer)
 library(caret)
 library(readr)
+require(corrplot)
 
-set.seed(611)
+set.seed(1)
 ```
 
 
@@ -28,12 +29,14 @@ precios_madrid <- read.csv("PreciosMadrid.csv")
 precios_madrid
 colnames(precios_madrid)
 
+
 ```
 Elijo las columnas que parecen mas interesantes
 ```{r}
 predata1 <- select(precios_madrid,price,floor_built,bathrooms,terrace,bedrooms,postalcode,garage_included)
 predata1
 colnames(predata1)
+
 ```
 Elimino pisos que cuesten 0, tengan 0 habitaciones,esten repetidos o sean NA. Tambien para acotar el dataset vamos a coger solo los anuncios de 10 postalcode
 ```{r}
@@ -44,7 +47,7 @@ predata <- unique(predata2)
 
 ```
 
-Convertir las columnas de valores char("True","False") en num(1,0) y los distritos pasarlos a numeros para trabajar con ellos.Tambien estandarizo todo en numeric
+Convertir las columnas de valores char("True","False") en num(1,0).Tambien estandarizo todo en numeric
 ```{r}
 predata$terrace <- as.numeric(as.logical(predata$terrace))
 predata$garage_included <- as.numeric(as.logical(predata$garage_included))
@@ -178,7 +181,7 @@ precio_pred <- predict(arbol, newdata = data_val)
 precio_pred[1]
 ```
 
-Vamos a hacer predicciones con datos nuevo del precio según el arbol, construir la matriz de confusion y dibujar un arbol mas complejo. Para ello vamos a crear valores de pruebas.
+Vamos a hacer predicciones con datos nuevo del precio según el arbol, para ello vamos a crear valores de pruebas.
 
 ```{r}
 price <- c(0,0,0,0,0)
@@ -197,12 +200,59 @@ data_test_nuevo <- data.frame(price,floor_built,bathrooms,terrace,bedrooms,posta
  nuevo_precio_pred <- predict(arbol, newdata = data_test_nuevo)
  
  
-nuevo_precio_pred[1]
-nuevo_precio_pred[2]
+nuevo_precio_pred
 
 
 ```
 
+Ahora pasamos a aplicar un metodo de regresion multiple para calcular el precio en funcion de las demas variables
+
+```{r}
+
+regresion_mul <- lm(formula = price ~ ., data = data)
+
+summary(regresion_mul)
 
 
+```
+Segun el R^2 el modelo puede explicar en un 60% la variabilidad del precio, ya que R^2=0,604. Tambien vemos que alguna variable predictor está relacionada con el precio ya que el p-value es bastante infimo.. No encontramos ninguna variable con un p-value alto por lo que nos indican que todas contribuyen en parte al modelo. 
+
+
+
+
+
+El metodo step, nos arroja que los metros construidos, los cuarto de baños y el codigo postal son las variables que mas correlacion tienen
+```{r}
+step(regresion_mul, direction = "both", trace = 0)
+```
+
+
+
+Hacemos un grafico corrplot para ver la correlacion con las variables, donde sacamos que las variables que mas influyen son los metros construidos, los cuarto de baños y el codigo postal. Vemos según diferentes métodos que esas son las variables con mayor correlacion.
+```{r}
+
+corrplot(cor(data) ,type = "lower",)
+```
+
+
+Ahora pasamos a graficar los residuos en funcion de los valores ajustados, es decir distancias entre los estimados y reales.
+
+```{r}
+
+plot(regresion_mul$fitted.values,  regresion_mul$residuals,
+     xlab = "Fitted values", ylab = "Residuals")
+
+
+```
+Sacamos el grafico Q-Q para comprar los residuos de dos distribuciones de probabilidad cuando trazamos los cuantiles entre ellos. No apreciamos ningun patron y podemos intuir que esta formanod una linea por lo que concluimos con que el modelo es bueno.
+```{r}
+qqnorm(regresion_mul$residuals, ylab = "Residual Quantiles")
+qqline(regresion_mul$residuals, col = 2)
+```
+
+
+Y vamos a predecir según la regresion multiple, luego compararemos con el arbol de decision
+```{r}
+predict(regresion_mul,data_test_nuevo)
+```
 

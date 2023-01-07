@@ -16,9 +16,12 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 library(caret)
+library(ggfortify)
 library(readr)
-require(corrplot)
+library(factoextra)
 
+
+require(corrplot)
 set.seed(1)
 ```
 
@@ -167,13 +170,13 @@ plotcp(arbol)
 
 Podamos el arból para reducirlo
 ```{r}
-arbol_podado <- prune(arbol, cp = 0.02)
+arbol_podado <- prune(arbol, cp = 0.052)
 prp(arbol_podado, type = 2, nn = TRUE, 
     fallen.leaves = FALSE,
     varlen = 0)
 
 ```
-Predeccimos en el data de validacion y vemos que nos arroja los datos correctos
+Predecimos en el data de validacion y vemos que nos arroja los datos correctos
 ```{r}
 precio_pred <- predict(arbol, newdata = data_val)
 
@@ -256,3 +259,108 @@ Y vamos a predecir según la regresion multiple, luego compararemos con el arbol
 predict(regresion_mul,data_test_nuevo)
 ```
 
+
+
+
+
+
+
+
+
+
+No supervisado: Clustering con k-means
+
+
+
+Primero pasamos a ver que las variables sean numericas
+
+```{r}
+lapply(data,class)
+```
+
+Comprobamos si necesitamos escalarlas. 
+```{r}
+summary(data)
+```
+
+Vemos que hay mucha diferencia entre el maximo y el minimo por lo cual sería necesario escalarlo
+```{r}
+data_scaled = scale(data)
+summary(data_scaled)
+```
+
+
+Una vez lo datos bien estructurados, pasamos a calcular el mejor valor de k. Para ello iremos iterando el valor de 1 a 20 para guardar el valor de compatacion en cada iteracion, luego lo graficaremos y veremos a el k que produce un cambio considerable. Inicializamos la variables nstart a 10 para controlar la aleatoridad.
+
+
+```{r}
+
+v_compac <-0
+
+for(i in 1:20){
+  
+  km1<-kmeans(data,center=i,nstar=10)
+  v_compac[i] <- km1$tot.withinss
+  
+}
+
+par(mfrow = c(1,1))
+
+plot(1:20, v_compac, type = "b", 
+     xlab = "Numero de clusters", 
+     ylab = "Compactacion")
+
+```
+
+Observamos que en k=3 y k=4 empieza a ver un cambio significativo, por lo cual escogemos estos valorres para K. Pasamos a ver los resultados y comparamos
+
+K=3
+
+```{r}
+kmeans3 <- kmeans(data, center =3,nstart= 10)
+kmeans3
+```
+
+
+Ahora pasamos a graficarlo para ver los resultados
+
+```{r}
+fviz_cluster(object = kmeans3, data = data, show.clust.cent = TRUE,
+             ellipse.type = "euclid", star.plot = TRUE, repel = TRUE) +
+  labs(title = "Resultados clustering K-means") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+Tenemos muchos valores, por lo que vamos a realizar otro grafico para verlo mas claro.
+
+```{r}
+autoplot(kmeans3, data, frame=TRUE)
+```
+
+
+
+
+K=4
+
+```{r}
+kmeans4 <- kmeans(data, center =4,nstart= 10)
+kmeans4
+```
+
+
+Ahora pasamos a graficarlo para ver los resultados
+
+```{r}
+fviz_cluster(object = kmeans4, data = data, show.clust.cent = TRUE,
+             ellipse.type = "euclid", star.plot = TRUE, repel = TRUE) +
+  labs(title = "Resultados clustering K-means") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+Tenemos muchos valores, por lo que vamos a realizar otro grafico para verlo mas claro.
+
+```{r}
+autoplot(kmeans4, data, frame=TRUE)
+```

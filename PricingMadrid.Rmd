@@ -1,6 +1,8 @@
 ---
 title: "Pricing"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2023-01-04"
 ---
 Paquetes y librerias
@@ -26,18 +28,20 @@ set.seed(1)
 ```
 
 
+
+
 Lectura del dataset 
 ```{r}
 precios_madrid <- read.csv("PreciosMadrid.csv")
-precios_madrid
+head(precios_madrid)
 colnames(precios_madrid)
 
 
 ```
-Elijo las columnas que parecen mas interesantes
+Despues de analizar el dataset elijo las columnas que parecen mas interesantes
 ```{r}
 predata1 <- select(precios_madrid,price,floor_built,bathrooms,terrace,bedrooms,postalcode,garage_included)
-predata1
+head(predata1)
 colnames(predata1)
 
 ```
@@ -79,11 +83,11 @@ xlab="Código Postal",
 ylab="Número de casas",)
 ```
 
-Vamos a etiquetar y categorizar según los metros construidos.
+Vamos a etiquetar y categorizar según los metros construidos, con el objetivo de ver los tipos de viviendas
 ```{r}
 data_metros <- data
 
-data_metros[order(data_metros$floor_built),]
+head(data_metros[order(data_metros$floor_built),])
 rangos <- c(0,65,100,150,Inf)
 values <- c ('Piso','Duplex','Casa','Chalet')
 
@@ -99,28 +103,29 @@ col=c("red","orange","green","blue"),)
 
 
 
-Vamos a calcular el precio medio y metros construidos dependiendo de la zona donde vivas (Código postal)
+Vamos a calcular el precio medio, metros construidos y los tipos de casas dependiendo de la zona (Código postal). Para el tipo de casa pasamos a numeric con la asignación por defecto el 1 a pisos, 2 a duplex... De esta manera obtendremos una media del tipo de casa por zona
 ```{r}
-
-media1 <- aggregate(data[, 1:2], list(data$postalcode), mean)
+data_metros$tipo <- as.numeric(as.factor(data_metros$tipo))
+media1 <- aggregate(data_metros[, c(1,2,8)], list(data_metros$postalcode), mean)
 media1
 
 ```
 
-Vamos a graficar la media de precio según los metros construidos de media en  en barras
+Vamos a graficar la media de precio según los metros construidos de media en barras, para ver si vemos algo interesante
 
 ```{r}
 ggplot(media1, aes(x = floor_built, y = price)) +
         geom_col()
 ```
-Vamos a graficar la media de precio según los metros construidos de media por zonas en puntos
+Nos percatamos de que en algunos casos en los que no se cumple que a mayor metros mayor precio.Vamos a graficar la media de precio según los metros construidos de media por zonas en puntos
 ```{r}
 #Pasamos a factor el codigo postal para ver mejor el codigo de colores
 media1$Group.1 <- as.factor(as.numeric(media1$Group.1))
 ggplot(media1, aes(x= floor_built, y=price, colour=Group.1)) + geom_point() 
 ```
+También vamos a hacer algunos analisis para ver como influyen otras variables, como el garaje, terraza...
 
-Gráfica para saber dependiendo del tipo de casas si lleva garage o no. Podriamos hacer esto con las diferentes variables, solo habría que cambiar el valor del aes.
+Gráfica para saber dependiendo del tipo de casa si lleva garage o no. Podriamos hacer esto con las diferentes variables, solo habría que cambiar el valor del aes.
 
 ```{r}
 a<- ggplot(data_metros, aes(garage_included)) 
@@ -136,7 +141,10 @@ a<- ggplot(data_metros, aes(postalcode))
 a + geom_bar(aes(fill = tipo))
 ```
 
-Ahora vamos a realizar un arbol de decision sobre la variable precio.
+Analsis supervisado:
+
+
+Ahora vamos a realizar un arbol de decisión sobre la variable precio.
 
 Primero partimos el dataset para tener datos de entrenamiento y datos de validacion.
 ```{r}
@@ -150,7 +158,7 @@ nrow(data_val)
 ```
 
 
-Podemos ver las diferentes variables que afectan a su precio y en que nos podemos basar para aproximar el precio medio de una vivienda.
+Realizando el arbol podemos ver las diferentes variables que afectan a su precio y en que nos podemos basar para aproximar el precio medio de una vivienda.
 ```{r}
 arbol <- rpart(formula =  price  ~ ., data = data_train)
 fancyRpartPlot(arbol)
@@ -161,14 +169,18 @@ prp(arbol, type = 2, nn = TRUE,
     fallen.leaves = FALSE,
     varlen = 0,  shadow.col = "gray")
 ```
-Vamos a ver el error relativo
+Observamos que los metros construidos y los cuartos de baños son las variables que mas afectan.
+
+
+
+Vamos a ver el error relativo y el cp
 ```{r}
 arbol$cptable
 plotcp(arbol)
 
 ```
 
-Podamos el arból para reducirlo
+Podamos el arból para reducirlo, usando el cp obtenido anteriormente
 ```{r}
 arbol_podado <- prune(arbol, cp = 0.052)
 prp(arbol_podado, type = 2, nn = TRUE, 
@@ -176,13 +188,17 @@ prp(arbol_podado, type = 2, nn = TRUE,
     varlen = 0)
 
 ```
-Predecimos en el data de validacion y vemos que nos arroja los datos correctos
+Predecimos en el data de validacion
 ```{r}
 precio_pred <- predict(arbol, newdata = data_val)
 
 
 precio_pred[1]
+data_val[1,1]
 ```
+
+El valor predeccido no difiere mucho del valor real como podemos ver.
+
 
 Vamos a hacer predicciones con datos nuevo del precio según el arbol, para ello vamos a crear valores de pruebas.
 
@@ -197,10 +213,9 @@ garage_included<- c(1,1,0,0,1)
 
 data_test_nuevo <- data.frame(price,floor_built,bathrooms,terrace,bedrooms,postalcode,garage_included)
 
-#Construimos unos de pruebas y ponemos a 0 la columna del precio. 
 
 #Predeccimos el precio segun el arbol
- nuevo_precio_pred <- predict(arbol, newdata = data_test_nuevo)
+nuevo_precio_pred <- predict(arbol, newdata = data_test_nuevo)
  
  
 nuevo_precio_pred
@@ -212,29 +227,29 @@ Ahora pasamos a aplicar un metodo de regresion multiple para calcular el precio 
 
 ```{r}
 
-regresion_mul <- lm(formula = price ~ ., data = data)
+regresion_mul <- lm(formula = price ~ ., data = data_train)
 
 summary(regresion_mul)
 
 
 ```
-Segun el R^2 el modelo puede explicar en un 60% la variabilidad del precio, ya que R^2=0,604. Tambien vemos que alguna variable predictor está relacionada con el precio ya que el p-value es bastante infimo.. No encontramos ninguna variable con un p-value alto por lo que nos indican que todas contribuyen en parte al modelo. 
+Segun el R^2 el modelo puede explicar en un 59% la variabilidad del precio, ya que R^2=0,5982. Tambien vemos que alguna variable predictor está relacionada con el precio ya que el p-value es bastante infimo.. No encontramos ninguna variable con un p-value alto por lo que nos indican que todas contribuyen en parte al modelo. 
 
 
 
 
 
-El metodo step, nos arroja que los metros construidos, los cuarto de baños y el codigo postal son las variables que mas correlacion tienen
+El metodo step, nos arroja que los metros construidos y los cuarto de baños son las variables que mas correlacion tienen. Los
 ```{r}
 step(regresion_mul, direction = "both", trace = 0)
 ```
 
 
 
-Hacemos un grafico corrplot para ver la correlacion con las variables, donde sacamos que las variables que mas influyen son los metros construidos, los cuarto de baños y el codigo postal. Vemos según diferentes métodos que esas son las variables con mayor correlacion.
+Hacemos un grafico corrplot para ver la correlacion con las variables, donde sacamos que las variables que mas influyen son los metros construidos, los cuarto de baños y las camas. Vemos según diferentes métodos que esas son las variables con mayor correlacion.
 ```{r}
 
-corrplot(cor(data) ,type = "lower",)
+corrplot(cor(data_train) ,type = "lower",)
 ```
 
 
@@ -254,11 +269,17 @@ qqline(regresion_mul$residuals, col = 2)
 ```
 
 
-Y vamos a predecir según la regresion multiple, luego compararemos con el arbol de decision
+Y vamos a predecir según la regresion multiple, luego compararemos con el arbol de decision.
 ```{r}
-predict(regresion_mul,data_test_nuevo)
-```
 
+
+data_val_regresion <-predict(regresion_mul, data_val)
+predict(regresion_mul,data_test_nuevo)
+
+data_val_regresion[1]
+data_val[1,1]
+```
+Primero vemos los datos arrojados por la prediccion en los valores de pruebas creados anteriormente,  no distan muchos del de los aboles. Luego, al igual que con los arboles, comparamos el valor del precio real con el calculado con la regresion, vemos que está mas lejano que los arboles y por tanto ha hecho peor prediccion
 
 
 
@@ -283,7 +304,7 @@ Comprobamos si necesitamos escalarlas.
 summary(data)
 ```
 
-Vemos que hay mucha diferencia entre el maximo y el minimo por lo cual sería necesario escalarlo
+Vemos que hay mucha diferencia entre el maximo y el minimo por lo cual sería necesario escalarlo, para tener una mejor vision global
 ```{r}
 data_scaled = scale(data)
 summary(data_scaled)
@@ -312,7 +333,7 @@ plot(1:20, v_compac, type = "b",
 
 ```
 
-Observamos que en k=3 y k=4 empieza a ver un cambio significativo, por lo cual escogemos estos valorres para K. Pasamos a ver los resultados y comparamos
+Observamos que en k=3 y k=4 empieza a ver un cambio significativo, por lo cual escogemos estos valores para K. Pasamos a ver los resultados y comparamos
 
 K=3
 
@@ -349,7 +370,7 @@ kmeans4
 ```
 
 
-Ahora pasamos a graficarlo para ver los resultados
+Ahora pasamos a graficarlo para ver los resultados, como hemos hecho anteriormente
 
 ```{r}
 fviz_cluster(object = kmeans4, data = data, show.clust.cent = TRUE,
@@ -359,8 +380,10 @@ fviz_cluster(object = kmeans4, data = data, show.clust.cent = TRUE,
   theme(legend.position = "none")
 ```
 
-Tenemos muchos valores, por lo que vamos a realizar otro grafico para verlo mas claro.
 
 ```{r}
 autoplot(kmeans4, data, frame=TRUE)
 ```
+
+
+Obsevarmos que con K=4 tenemos todos los cluster con un gran numero de valores aunque al graficarlos vemos que están muy juntos por la zona media.

@@ -3,13 +3,16 @@ title: "Pricing"
 output:
   pdf_document: default
   html_document: default
-date: "2023-01-04"
+  
+date: "2023-01-08"
 ---
+Realizado por : Jose Delgado Serrano (Grupo 1)
+GitHub: https://github.com/Josdelser/PreciosMadrid-FID
+Kaggle: https://www.kaggle.com/datasets/mapecode/madrid-province-rent-data
+
+
 Paquetes y librerias
 ```{r}
-install.packages("tidyverse")
-install.packages("dplyr")
-install.packages("rattle")
 # libraries
 library(rpart)
 library(rpart.plot)

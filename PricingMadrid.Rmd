@@ -1,13 +1,13 @@
 ---
 title: "Pricing"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2023-01-04"
 ---
 Paquetes y librerias
 ```{r}
-install.packages("tidyverse")
-install.packages("dplyr")
-install.packages("rattle")
+
 # libraries
 library(rpart)
 library(rpart.plot)
@@ -26,10 +26,12 @@ set.seed(1)
 ```
 
 
+
+
 Lectura del dataset 
 ```{r}
 precios_madrid <- read.csv("PreciosMadrid.csv")
-precios_madrid
+head(precios_madrid)
 colnames(precios_madrid)
 
 
@@ -37,7 +39,7 @@ colnames(precios_madrid)
 Elijo las columnas que parecen mas interesantes
 ```{r}
 predata1 <- select(precios_madrid,price,floor_built,bathrooms,terrace,bedrooms,postalcode,garage_included)
-predata1
+head(predata1)
 colnames(predata1)
 
 ```
@@ -83,7 +85,7 @@ Vamos a etiquetar y categorizar según los metros construidos.
 ```{r}
 data_metros <- data
 
-data_metros[order(data_metros$floor_built),]
+head(data_metros[order(data_metros$floor_built),])
 rangos <- c(0,65,100,150,Inf)
 values <- c ('Piso','Duplex','Casa','Chalet')
 

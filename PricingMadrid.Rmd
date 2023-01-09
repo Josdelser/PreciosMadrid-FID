@@ -293,7 +293,7 @@ controlador <- rpart.control(minsplit = 10, minbucket = round(10 / 3), maxdepth 
 
 Luego volvemos a repetir todo el proceso
 ```{r}
-arbol2 <- rpart(categoria ~., data = data_train, method = 'class', control = control)
+arbol2 <- rpart(categoria ~., data = data_train, method = 'class', control = controlador)
 
 categoria_pred1 <- predict(arbol2, newdata = data_val, type="class")
 confunsion_m1 <- table(data_val$categoria, categoria_pred1)

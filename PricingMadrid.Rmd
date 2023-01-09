@@ -3,7 +3,7 @@ title: "Pricing"
 output:
   pdf_document: default
   html_document: default
-date: "2023-01-04"
+date: "2023-01-08"
 ---
 
 Realizado por : Jose Delgado Serrano (Grupo 1)
@@ -512,9 +512,8 @@ cortado_den1<-cutree(den1,k=4)
 Pintamos el grafico para verlo mas claro
 
 ```{r}
-fviz_dend(x = den1, cex = 0.8, lwd = 0.8, k = 4,hang = -10,
-
-          k_colors = c("red", "green3", "blue", "magenta") )
+#Descomentar para ver los resultados. Se ha tenido que comentar debido a que el nivel de carga es superior el de mi pc
+#fviz_dend(x = den1, cex = 0.8, lwd = 0.8, k = 4,hang = -10,k_colors = c("red", "green3", "blue", "magenta") )
 ```
 
 

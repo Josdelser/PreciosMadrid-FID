@@ -496,6 +496,9 @@ matriz_distancias <-dist(data)
 den1 = hclust(matriz_distancias, method = "complete")
 summary(den1)
 ```
+
+
+
 Pasamos a visualizarlo
 ```{r}
 plot(den1,hang = -10)
@@ -505,6 +508,15 @@ Decidimos cortar según el numero de clusters
 ```{r}
 cortado_den1<-cutree(den1,k=4)
 ```
+
+Pintamos el grafico para verlo mas claro
+
+```{r}
+fviz_dend(x = den1, cex = 0.8, lwd = 0.8, k = 4,hang = -10,
+
+          k_colors = c("red", "green3", "blue", "magenta") )
+```
+
 
 Y comparamos con k-means
 
